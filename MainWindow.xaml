@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AutoTricklerGui"
         mc:Ignorable="d"
+        Name="mainWindow"
         Title="Sqwan's automatischer Pulver-Trickler für G&amp;G PLC" Height="350" Width="600">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -24,6 +25,7 @@
             <RowDefinition Height="50" />
         </Grid.RowDefinitions>
         <TextBlock 
+            Name="scaleValueLabel"
             FontSize="70"
             VerticalAlignment="Center"
             HorizontalAlignment="Center"
@@ -41,8 +43,8 @@
             PreviewTextInput="powderQty_PreviewTextInput">49
         </TextBox>
         <Label Grid.Column="2" Grid.Row="2" Content="Grain" FontSize="30" Margin="3" />
-        <Button Name="Start" Grid.Column="3" Grid.Row="2" Margin="3" FontSize="30" Click="Start_Button_Click">Start</Button>
-        <Button Grid.Column="2" Grid.Row="3" Margin="3" FontSize="30">Tara</Button>
+        <Button Name="Start" Grid.Column="3" Grid.Row="2" Margin="3" FontSize="30" Click="Start_Button_Click" IsEnabled="{Binding isEnabled}">Start</Button>
+        <Button Name="taraBtn" Grid.Column="2" Grid.Row="3" Margin="3" FontSize="30" Click="taraBtn_Click">Tara</Button>
         <Button Grid.Column="3" Grid.Row="3" Margin="3" FontSize="30">CAL</Button>
         <Button Grid.Column="1" Grid.Row="3" Margin="3" FontSize="30" Click="Reset_Button_Click">Reset</Button>
         <Label Name="Stk" Grid.Column="0" Grid.Row="3" Content="0 Stk" FontSize="30" Margin="3" />
