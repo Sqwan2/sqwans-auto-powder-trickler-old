@@ -24,15 +24,14 @@
             <RowDefinition Height="50" />
             <RowDefinition Height="50" />
         </Grid.RowDefinitions>
-        <TextBlock 
+        <Label 
             Name="scaleValueLabel"
-            FontSize="70"
+            FontSize="50"
             VerticalAlignment="Center"
             HorizontalAlignment="Center"
             Grid.ColumnSpan="3"
-            Grid.RowSpan="2">
-            200 grs
-        </TextBlock>
+            Grid.RowSpan="2"
+            Content="{Binding CurrentScaleValueString}" />
         <TextBox
             Name="powderQty"
             Grid.Row="2" 
@@ -47,7 +46,7 @@
         <Button Name="taraBtn" Grid.Column="2" Grid.Row="3" Margin="3" FontSize="30" Click="taraBtn_Click">Tara</Button>
         <Button Grid.Column="3" Grid.Row="3" Margin="3" FontSize="30">CAL</Button>
         <Button Grid.Column="1" Grid.Row="3" Margin="3" FontSize="30" Click="Reset_Button_Click">Reset</Button>
-        <Label Name="Stk" Grid.Column="0" Grid.Row="3" Content="0 Stk" FontSize="30" Margin="3" />
+        <Label Name="Stk" Grid.Column="0" Grid.Row="3" Content="{Binding NumberOfWeighings}" FontSize="30" Margin="3" />
 
         <ComboBox Grid.Column="3" Grid.Row="0" FontSize="30" SelectedIndex="0" Margin="3" Name="comPorts">
         </ComboBox>
@@ -77,10 +76,10 @@
         <Label Name="avgLabel" Grid.Column="3" Grid.Row="5" Content="AVG" FontSize="30" Margin="3" />
         <Label Name="sdLabel" Grid.Column="4" Grid.Row="5" Content="SD" FontSize="30" Margin="3" />
 
-        <Label Name="minValueLabel" Grid.Column="0" Grid.Row="6" Content="49,0" FontSize="30" Margin="3" />
-        <Label Name="maxValueLabel" Grid.Column="1" Grid.Row="6" Content="49,3" FontSize="30" Margin="3" />
-        <Label Name="esValueLabel" Grid.Column="2" Grid.Row="6" Content="0,3" FontSize="30" Margin="3" />
-        <Label Name="avgValueLabel" Grid.Column="3" Grid.Row="6" Content="49,1" FontSize="30" Margin="3" />
-        <Label Name="sdValueLabel" Grid.Column="4" Grid.Row="6" Content="0,05" FontSize="30" Margin="3" />
+        <Label Name="minValueLabel" Grid.Column="0" Grid.Row="6" Content="{Binding MinWeight}" FontSize="30" Margin="3" />
+        <Label Name="maxValueLabel" Grid.Column="1" Grid.Row="6" Content="{Binding MaxWeight}" FontSize="30" Margin="3" />
+        <Label Name="esValueLabel" Grid.Column="2" Grid.Row="6" Content="{Binding ExtremeSpread}" FontSize="30" Margin="3" />
+        <Label Name="avgValueLabel" Grid.Column="3" Grid.Row="6" Content="{Binding AverageWeight}" FontSize="30" Margin="3" />
+        <Label Name="sdValueLabel" Grid.Column="4" Grid.Row="6" Content="{Binding StandardDeviation}" FontSize="30" Margin="3" />
     </Grid>
 </Window>
