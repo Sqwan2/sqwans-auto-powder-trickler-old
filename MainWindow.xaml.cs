@@ -13,14 +13,15 @@ namespace AutoTricklerGui
     public partial class MainWindow : Window
     {
         private int count = 0;
-        static SerialPort _serialPort;
+        SerialPortWrapper serialPort = new SerialPortWrapper("COM4", 9600);
         private delegate void SetTextDeleg(string text);
-        decimal scaleValue = 0;
         public bool isEnabled = false;
 
         string scaleValueStr = "";
 
         bool semaphore = true;
+
+        private ScaleData _scaleData = new ScaleData();
 
         public MainWindow()
         {
@@ -32,12 +33,9 @@ namespace AutoTricklerGui
                 comPortsTrickler.Items.Add(port);
             }
 
-            _serialPort = new SerialPort("COM4", 9600, Parity.None, 8, StopBits.One);
-            _serialPort.Handshake = Handshake.None;
-            _serialPort.ReadTimeout = 500;
-            _serialPort.WriteTimeout = 500;
-            _serialPort.DataReceived += new SerialDataReceivedEventHandler(sp_DataReceived);
-            _serialPort.Open();
+            serialPort.SerialConnection.DataReceived += new SerialDataReceivedEventHandler(sp_DataReceived);
+
+            this.DataContext = _scaleData;
 
             new Thread(readScaleValue).Start();
         }
@@ -52,7 +50,7 @@ namespace AutoTricklerGui
                     {
                         semaphore = false;
                         byte[] bytesToSend = { 0x1B, 0x70 };
-                        _serialPort.Write(bytesToSend, 0, bytesToSend.Length);
+                        serialPort.SerialConnection.Write(bytesToSend, 0, bytesToSend.Length);
                     }catch { }
                 }
                 Thread.Sleep(5);
@@ -62,13 +60,21 @@ namespace AutoTricklerGui
         void sp_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             byte[] data = new byte[1024];
-            int bytesRead = _serialPort.Read(data, 0, data.Length);
+            int bytesRead = serialPort.SerialConnection.Read(data, 0, data.Length);
             string scaleValuePart = Encoding.ASCII.GetString(data, 0, bytesRead);
 
             scaleValueStr += scaleValuePart;
             if (scaleValueStr.Contains("\n"))
             {
-                Dispatcher.BeginInvoke(new SetTextDeleg(si_DataReceived), new object[] { scaleValueStr });
+
+                string valueNumberPart = scaleValueStr.Substring(3, 7).Replace('.', ',');
+                _scaleData.CurrentScaleValue = Convert.ToDecimal(valueNumberPart);
+                if (scaleValueStr.StartsWith('-'))
+                {
+                    _scaleData.CurrentScaleValue = _scaleData.CurrentScaleValue * -1;
+                }
+
+                //Dispatcher.BeginInvoke(new SetTextDeleg(si_DataReceived), new object[] { scaleValueStr });
                 scaleValueStr = "";
                 semaphore = true;
             }
@@ -76,16 +82,16 @@ namespace AutoTricklerGui
         private void si_DataReceived(string data) 
         {
             string valueNumberPart = data.Substring(3,7).Replace('.',',');
-            scaleValue = Convert.ToDecimal(valueNumberPart);
+            _scaleData.CurrentScaleValue = Convert.ToDecimal(valueNumberPart);
             if(data.StartsWith('-'))
             {
-                scaleValue = scaleValue * -1;
+                _scaleData.CurrentScaleValue = _scaleData.CurrentScaleValue * -1;
             }
-            scaleValueLabel.Text = scaleValue.ToString();
         }
 
         private void Start_Button_Click(object sender, RoutedEventArgs e)
         {
+            _scaleData.addScaleValue(_scaleData.CurrentScaleValue);
             /*
             decimal powderQtyDouble = 0.0M;
             
@@ -115,8 +121,9 @@ namespace AutoTricklerGui
 
         private void Reset_Button_Click(object sender, RoutedEventArgs e)
         {
-            this.count = 0;
-            Stk.Content = count + " Stk";
+            _scaleData.ResetScaleValueList();
+            //this.count = 0;
+            //Stk.Content = count + " Stk";
         }
 
         private void powderQty_PreviewTextInput(object sender, TextCompositionEventArgs e)
@@ -143,7 +150,7 @@ namespace AutoTricklerGui
         private void taraBtn_Click(object sender, RoutedEventArgs e)
         {
             byte[] bytesToSend = { 0x1B, 0x74 };
-            _serialPort.Write(bytesToSend, 0, bytesToSend.Length);
+            serialPort.SerialConnection.Write(bytesToSend, 0, bytesToSend.Length);
         }
     }
 }
