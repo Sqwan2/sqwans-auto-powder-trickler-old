@@ -3,25 +3,16 @@ using System.Windows;
 using System.Windows.Input;
 using System.IO.Ports;
 using System.Threading;
-using System.Windows.Controls;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Windows.Media.Media3D;
 
 namespace AutoTricklerGui
 {
     public partial class MainWindow : Window
     {
-        private int count = 0;
-        SerialPortWrapper serialPort = new SerialPortWrapper("COM4", 9600);
+        private SerialPortWrapper serialPort;
+        private ScaleData _scaleData;
+        private ScaleController scaleController;
         private delegate void SetTextDeleg(string text);
         public bool isEnabled = false;
-
-        string scaleValueStr = "";
-
-        bool semaphore = true;
-
-        private ScaleData _scaleData = new ScaleData();
 
         public MainWindow()
         {
@@ -32,61 +23,15 @@ namespace AutoTricklerGui
                 comPorts.Items.Add(port);
                 comPortsTrickler.Items.Add(port);
             }
+            serialPort = new SerialPortWrapper("COM4", 9600);
+            _scaleData = new ScaleData();
+            scaleController = new ScaleController(serialPort, _scaleData);
 
-            serialPort.SerialConnection.DataReceived += new SerialDataReceivedEventHandler(sp_DataReceived);
+            serialPort.SerialConnection.DataReceived += new SerialDataReceivedEventHandler(scaleController.ScaleDataReceivedHandler);
 
             this.DataContext = _scaleData;
 
-            new Thread(readScaleValue).Start();
-        }
-
-        private void readScaleValue()
-        {
-            while (true)
-            {
-                if (semaphore)
-                {
-                    try
-                    {
-                        semaphore = false;
-                        byte[] bytesToSend = { 0x1B, 0x70 };
-                        serialPort.SerialConnection.Write(bytesToSend, 0, bytesToSend.Length);
-                    }catch { }
-                }
-                Thread.Sleep(5);
-            }
-        }
-
-        void sp_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            byte[] data = new byte[1024];
-            int bytesRead = serialPort.SerialConnection.Read(data, 0, data.Length);
-            string scaleValuePart = Encoding.ASCII.GetString(data, 0, bytesRead);
-
-            scaleValueStr += scaleValuePart;
-            if (scaleValueStr.Contains("\n"))
-            {
-
-                string valueNumberPart = scaleValueStr.Substring(3, 7).Replace('.', ',');
-                _scaleData.CurrentScaleValue = Convert.ToDecimal(valueNumberPart);
-                if (scaleValueStr.StartsWith('-'))
-                {
-                    _scaleData.CurrentScaleValue = _scaleData.CurrentScaleValue * -1;
-                }
-
-                //Dispatcher.BeginInvoke(new SetTextDeleg(si_DataReceived), new object[] { scaleValueStr });
-                scaleValueStr = "";
-                semaphore = true;
-            }
-        }
-        private void si_DataReceived(string data) 
-        {
-            string valueNumberPart = data.Substring(3,7).Replace('.',',');
-            _scaleData.CurrentScaleValue = Convert.ToDecimal(valueNumberPart);
-            if(data.StartsWith('-'))
-            {
-                _scaleData.CurrentScaleValue = _scaleData.CurrentScaleValue * -1;
-            }
+            new Thread(scaleController.requestScaleValue).Start();
         }
 
         private void Start_Button_Click(object sender, RoutedEventArgs e)
@@ -122,8 +67,6 @@ namespace AutoTricklerGui
         private void Reset_Button_Click(object sender, RoutedEventArgs e)
         {
             _scaleData.ResetScaleValueList();
-            //this.count = 0;
-            //Stk.Content = count + " Stk";
         }
 
         private void powderQty_PreviewTextInput(object sender, TextCompositionEventArgs e)
@@ -149,8 +92,7 @@ namespace AutoTricklerGui
 
         private void taraBtn_Click(object sender, RoutedEventArgs e)
         {
-            byte[] bytesToSend = { 0x1B, 0x74 };
-            serialPort.SerialConnection.Write(bytesToSend, 0, bytesToSend.Length);
+            scaleController.tara();
         }
     }
 }
